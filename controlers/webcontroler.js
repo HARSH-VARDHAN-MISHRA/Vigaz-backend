@@ -480,6 +480,7 @@ exports.updateProduct = async (req, res) => {
     try {
         const productId = req.params.id;
         const updates = req.body;
+        // console.log("Incoming update request:", req.body);
 
         // Check if there are no fields to update
         if (Object.keys(updates).length === 0) {
@@ -489,14 +490,23 @@ exports.updateProduct = async (req, res) => {
             });
         }
 
+        // Map productDescriptions to productDesc if it exists in the updates
+        if (updates.productDescriptions) {
+            updates.productDesc = updates.productDescriptions;
+            delete updates.productDescriptions; // Remove the alias field to avoid conflicts
+        }
+
         const options = { new: true }; // Return the modified document
         const updatedProduct = await productDetail.findByIdAndUpdate(productId, updates, options);
+
         if (!updatedProduct) {
             return res.status(404).json({
                 success: false,
-                msg: "productScheme not found."
+                msg: "Product not found."
             });
         }
+
+        console.log("Updated product:", updatedProduct);
 
         res.status(200).json({
             success: true,
@@ -504,7 +514,7 @@ exports.updateProduct = async (req, res) => {
             data: updatedProduct
         });
     } catch (error) {
-        console.log("Error : ", error);
+        console.log("Error:", error);
         return res.status(500).json({
             success: false,
             message: "Internal Server Error"
